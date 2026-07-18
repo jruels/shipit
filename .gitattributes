@@ -1,0 +1,6 @@
+# Normalize line endings; keep shell scripts LF so they run on Linux runners.
+* text=auto eol=lf
+*.sln text eol=crlf
+*.png binary
+*.jpg binary
+*.jpeg binary
