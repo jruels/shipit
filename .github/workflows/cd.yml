@@ -60,27 +60,25 @@ jobs:
         run: |
           FQDN=$(az containerapp show -n shipit-production -g "$RG" \
             --query "properties.configuration.ingress.fqdn" -o tsv)
-          NEWREV=$(az containerapp show -n shipit-production -g "$RG" \
-            --query "properties.latestRevisionName" -o tsv)
-          # az returns as soon as the revision is provisioned, but Container Apps
-          # keeps serving the OLD revision until the new one takes over. Poll /readyz
-          # too early and you hit the old (healthy) revision and pass a bad deploy.
-          # Wait until the new revision holds 100% of traffic first.
-          echo "waiting for $NEWREV to receive traffic..."
+          # Container Apps sets the new revision's traffic weight to 100 in config
+          # almost immediately, but the *actual* data-plane traffic shift lags by up to
+          # a minute or two. If we polled once and exited on the first 200, we could hit
+          # the OLD (healthy) revision and wave a broken new deploy straight through.
+          # So: let traffic settle, then require /readyz to be healthy for several
+          # CONSECUTIVE checks. A bad revision returns 503 once it starts serving, which
+          # resets the streak and fails the job -> triggering rollback.
+          sleep 30
+          ok=0
           for i in $(seq 1 18); do
-            tw=$(az containerapp revision show -n shipit-production -g "$RG" \
-              --revision "$NEWREV" --query "properties.trafficWeight" -o tsv 2>/dev/null)
-            [ "$tw" = "100" ] && break
-            sleep 10
-          done
-          echo "polling readiness of the live revision..."
-          for i in $(seq 1 12); do
-            if curl -fsS "https://$FQDN/readyz" >/dev/null; then
-              echo "ready"; exit 0
+            if curl -fsS "https://$FQDN/readyz" >/dev/null 2>&1; then
+              ok=$((ok+1))
+            else
+              ok=0
             fi
-            sleep 10
+            if [ "$ok" -ge 5 ]; then echo "sustained ready"; exit 0; fi
+            sleep 5
           done
-          echo "never became ready"; exit 1
+          echo "never became reliably ready"; exit 1
       - name: Roll back on failure
         if: steps.health.outcome == 'failure'
         run: |
