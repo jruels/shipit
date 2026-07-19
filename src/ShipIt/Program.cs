@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ShipIt.Models;
 using ShipIt.Services;
 
@@ -79,6 +80,14 @@ app.MapPost("/api/shipments", (ShipmentInput input, ShipmentStore store) =>
 
     var created = store.Add(input.Destination.Trim());
     return Results.Created($"/api/shipments/{created.Id}", created);
+});
+
+
+app.MapGet("/trace/{host}", (string host) =>
+{
+    // BAD: user input concatenated into a shell command.
+    Process.Start("/bin/sh", $"-c \"ping -c 1 {host}\"");
+    return Results.Ok($"tracing {host}");
 });
 
 app.Run();
