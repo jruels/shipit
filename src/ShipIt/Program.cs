@@ -82,12 +82,11 @@ app.MapPost("/api/shipments", (ShipmentInput input, ShipmentStore store) =>
 });
 
 
-app.MapGet("/read", (HttpContext ctx) =>
+app.MapGet("/keyinfo", () =>
 {
-    // BAD: user-controlled path flows into a file read (path injection).
-    var name = ctx.Request.Query["name"].ToString();
-    var text = File.ReadAllText(name);
-    return Results.Text(text);
+    // BAD: RSA key well below 2048 bits -> CodeQL cs/insufficient-key-size (weak encryption).
+    using var rsa = System.Security.Cryptography.RSA.Create(512);
+    return Results.Ok(new { keySize = rsa.KeySize });
 });
 
 app.Run();
