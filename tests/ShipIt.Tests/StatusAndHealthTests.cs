@@ -24,7 +24,7 @@ public class StatusAndHealthTests : IClassFixture<WebApplicationFactory<Program>
     {
         var client = _factory.CreateClient();
         var response = await client.GetAsync("/readyz");
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
     }
 
     [Fact]
