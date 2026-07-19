@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using ShipIt.Models;
 using ShipIt.Services;
 
@@ -83,12 +82,12 @@ app.MapPost("/api/shipments", (ShipmentInput input, ShipmentStore store) =>
 });
 
 
-app.MapGet("/trace", (HttpContext ctx) =>
+app.MapGet("/read", (HttpContext ctx) =>
 {
-    // BAD: user-controlled query string concatenated into a shell command.
-    var host = ctx.Request.Query["host"].ToString();
-    Process.Start("/bin/sh", $"-c \"ping -c 1 {host}\"");
-    return Results.Ok($"tracing {host}");
+    // BAD: user-controlled path flows into a file read (path injection).
+    var name = ctx.Request.Query["name"].ToString();
+    var text = File.ReadAllText(name);
+    return Results.Text(text);
 });
 
 app.Run();
