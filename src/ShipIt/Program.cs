@@ -83,9 +83,10 @@ app.MapPost("/api/shipments", (ShipmentInput input, ShipmentStore store) =>
 });
 
 
-app.MapGet("/trace/{host}", (string host) =>
+app.MapGet("/trace", (HttpContext ctx) =>
 {
-    // BAD: user input concatenated into a shell command.
+    // BAD: user-controlled query string concatenated into a shell command.
+    var host = ctx.Request.Query["host"].ToString();
     Process.Start("/bin/sh", $"-c \"ping -c 1 {host}\"");
     return Results.Ok($"tracing {host}");
 });
