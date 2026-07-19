@@ -81,6 +81,15 @@ app.MapPost("/api/shipments", (ShipmentInput input, ShipmentStore store) =>
     return Results.Created($"/api/shipments/{created.Id}", created);
 });
 
+
+app.MapGet("/read", (HttpContext ctx) =>
+{
+    // BAD: user-controlled query value flows into a file path (path injection).
+    var name = ctx.Request.Query["name"].ToString();
+    var text = File.ReadAllText(name);
+    return Results.Text(text);
+});
+
 app.Run();
 
 // Exposed so the test project can host the app with WebApplicationFactory<Program>.
