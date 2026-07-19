@@ -1,0 +1,90 @@
+name: CD
+on:
+  workflow_run:
+    workflows: ["CI"]        # your CI workflow (built in Module 2, pushes SHA-tagged images since Module 3)
+    types: [completed]
+    branches: [main]
+
+permissions:
+  id-token: write            # required to request an OIDC token
+  contents: read
+
+jobs:
+  deploy-staging:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy image to staging
+        run: |
+          az containerapp update -n shipit-staging -g "$RG" \
+            --image "$ACR.azurecr.io/shipit:$SHA"
+        env:
+          RG: ${{ vars.RG }}
+          ACR: ${{ vars.ACR }}
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production        # run pauses here for the required reviewer
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      RG: ${{ vars.RG }}
+      ACR: ${{ vars.ACR }}
+    steps:
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Record current image (for rollback)
+        id: current
+        run: |
+          PREV=$(az containerapp show -n shipit-production -g "$RG" \
+            --query "properties.template.containers[0].image" -o tsv)
+          echo "prev=$PREV" >> "$GITHUB_OUTPUT"
+      - name: Deploy new image
+        run: |
+          az containerapp update -n shipit-production -g "$RG" \
+            --image "$ACR.azurecr.io/shipit:$SHA"
+      - name: Health check
+        id: health
+        continue-on-error: true
+        run: |
+          FQDN=$(az containerapp show -n shipit-production -g "$RG" \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          NEWREV=$(az containerapp show -n shipit-production -g "$RG" \
+            --query "properties.latestRevisionName" -o tsv)
+          # az returns as soon as the revision is provisioned, but Container Apps
+          # keeps serving the OLD revision until the new one takes over. Poll /readyz
+          # too early and you hit the old (healthy) revision and pass a bad deploy.
+          # Wait until the new revision holds 100% of traffic first.
+          echo "waiting for $NEWREV to receive traffic..."
+          for i in $(seq 1 18); do
+            tw=$(az containerapp revision show -n shipit-production -g "$RG" \
+              --revision "$NEWREV" --query "properties.trafficWeight" -o tsv 2>/dev/null)
+            [ "$tw" = "100" ] && break
+            sleep 10
+          done
+          echo "polling readiness of the live revision..."
+          for i in $(seq 1 12); do
+            if curl -fsS "https://$FQDN/readyz" >/dev/null; then
+              echo "ready"; exit 0
+            fi
+            sleep 10
+          done
+          echo "never became ready"; exit 1
+      - name: Roll back on failure
+        if: steps.health.outcome == 'failure'
+        run: |
+          echo "::error::Deploy failed readiness. Rolling back to ${{ steps.current.outputs.prev }}"
+          az containerapp update -n shipit-production -g "$RG" \
+            --image "${{ steps.current.outputs.prev }}"
+          exit 1
