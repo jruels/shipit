@@ -2,6 +2,7 @@ using ShipIt.Models;
 using ShipIt.Services;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,6 +75,15 @@ app.MapGet("/legacy-hash/{value}", (string value) =>
     using var md5 = MD5.Create();
     var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(value));
     return Results.Ok(Convert.ToHexString(hash));
+});
+
+app.MapGet("/lookup/{destination}", (string destination) =>
+{
+    // BAD: user input concatenated directly into a SQL query string.
+    var query = "SELECT * FROM Shipments WHERE Destination = '" + destination + "'";
+    using var connection = new SqlConnection("Server=localhost;Database=ShipIt;Integrated Security=true;");
+    using var command = new SqlCommand(query, connection);
+    return Results.Ok(query);
 });
 
 // Minimal shipment API backed by an in-memory store (no database).
