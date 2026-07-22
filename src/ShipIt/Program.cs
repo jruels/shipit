@@ -1,6 +1,6 @@
 using ShipIt.Models;
 using ShipIt.Services;
-using Microsoft.Data.SqlClient;
+using System.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
