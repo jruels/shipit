@@ -1,5 +1,6 @@
 using ShipIt.Models;
 using ShipIt.Services;
+using Microsoft.Data.SqlClient;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -64,6 +65,16 @@ app.MapGet("/", () =>
     </html>
     """;
     return Results.Content(html, "text/html");
+});
+
+app.MapGet("/lookup", (HttpContext ctx) =>
+{
+    // BAD: query string value concatenated directly into a SQL query.
+    string destination = ctx.Request.Query["destination"].ToString();
+    var query = "SELECT * FROM Shipments WHERE Destination = '" + destination + "'";
+    using var connection = new SqlConnection("Server=localhost;Database=ShipIt;Integrated Security=true;");
+    using var command = new SqlCommand(query, connection);
+    return Results.Ok(query);
 });
 
 // Minimal shipment API backed by an in-memory store (no database).
