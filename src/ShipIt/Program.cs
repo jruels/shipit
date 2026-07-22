@@ -1,5 +1,7 @@
 using ShipIt.Models;
 using ShipIt.Services;
+using System.Security.Cryptography;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -64,6 +66,14 @@ app.MapGet("/", () =>
     </html>
     """;
     return Results.Content(html, "text/html");
+});
+
+app.MapGet("/legacy-hash/{value}", (string value) =>
+{
+    // BAD: MD5 is a broken hash algorithm; CodeQL flags this call directly.
+    using var md5 = MD5.Create();
+    var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(value));
+    return Results.Ok(Convert.ToHexString(hash));
 });
 
 // Minimal shipment API backed by an in-memory store (no database).
