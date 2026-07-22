@@ -17,6 +17,13 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
+          
+      - name: Upload the test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/test-results.trx"
 
       - name: Restore
         run: dotnet restore
@@ -42,3 +49,14 @@ jobs:
         with:
           name: test-results
           path: "**/test-results.trx"
+      
+      - name: Publish the app
+        run: dotnet publish src/ShipIt --configuration Release --no-build -o ./publish
+
+      - name: Upload the published app
+        uses: actions/upload-artifact@v4
+        with:
+          name: shipit-app
+          path: ./publish
+
+      
