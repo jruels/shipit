@@ -1,3 +1,4 @@
+# This workflow uses the CodeQL tool to scan code for vulnerabilities. 
 name: CodeQL
 on:
   push:
