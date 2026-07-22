@@ -69,8 +69,10 @@ jobs:
         run: |
           az acr login --name ${{ vars.ACR }}
           IMAGE=${{ vars.ACR }}.azurecr.io/shipit:${{ github.sha }}
-          docker build -t "$IMAGE" .
+          LATEST=${{ vars.ACR }}.azurecr.io/shipit:latest
+          docker build -t "$IMAGE" -t "$LATEST" .
           docker push "$IMAGE"
+          docker push "$LATEST"
 
       - name: Scan the image
         if: github.event_name == 'push'
@@ -79,4 +81,4 @@ jobs:
           image-ref: ${{ vars.ACR }}.azurecr.io/shipit:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
-          exit-code: "0"
+          exit-code: "1"
