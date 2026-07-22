@@ -11,7 +11,7 @@ COPY . .
 RUN dotnet publish src/ShipIt -c Release -o /app --no-restore
 
 # runtime stage: small image, only the published app
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled
 WORKDIR /app
 COPY --from=build /app .
 USER $APP_UID
