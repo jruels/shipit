@@ -13,7 +13,7 @@ RUN dotnet restore src/ShipIt/ShipIt.csproj
 COPY . .
 RUN dotnet publish src/ShipIt -c Release -o /app
 
-# runtime stage: small image, only the published app
+# runtime stage: small image, only the published app.
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app .
