@@ -23,10 +23,9 @@ static string AppVersion() => Environment.GetEnvironmentVariable("SHIPIT_VERSION
 // Readiness can be forced off with SHIPIT_READY=false to simulate a bad deploy
 // (used to trigger rollback in Labs 5 and 7).
 
-//static bool IsReady() =>
-//    !string.Equals(Environment.GetEnvironmentVariable("SHIPIT_READY"), "false", StringComparison.OrdinalIgnoreCase);
+static bool IsReady() =>
+    !string.Equals(Environment.GetEnvironmentVariable("SHIPIT_READY"), "false", StringComparison.OrdinalIgnoreCase);
 
-static bool IsReady() => false;
 
 // Liveness: the process is up. Never gated, so a live pod is not killed by config.
 app.MapGet("/healthz", () => Results.Text("OK", "text/plain"));
