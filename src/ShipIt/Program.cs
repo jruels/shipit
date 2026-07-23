@@ -1,5 +1,6 @@
 using ShipIt.Models;
 using ShipIt.Services;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +22,7 @@ static string BannerColor() => Environment.GetEnvironmentVariable("SHIPIT_BANNER
 static string AppVersion() => Environment.GetEnvironmentVariable("SHIPIT_VERSION") ?? "0.1.0-dev";
 // Readiness can be forced off with SHIPIT_READY=false to simulate a bad deploy
 // (used to trigger rollback in Labs 5 and 7).
-static bool IsReady() =>
-    !string.Equals(Environment.GetEnvironmentVariable("SHIPIT_READY"), "false", StringComparison.OrdinalIgnoreCase);
+static bool IsReady() => false;
 
 // Liveness: the process is up. Never gated, so a live pod is not killed by config.
 app.MapGet("/healthz", () => Results.Text("OK", "text/plain"));
@@ -66,6 +66,13 @@ app.MapGet("/", () =>
     return Results.Content(html, "text/html");
 });
 
+// vulnerable endpoint to demonstrate a command injection vulnerability. 
+app.MapGet("/trace/{host}", (string host) =>
+{
+    // BAD: user input concatenated into a shell command.
+    Process.Start("/bin/sh", $"-c \"ping -c 1 {host}\"");
+    return Results.Ok($"tracing {host}");
+});
 // Minimal shipment API backed by an in-memory store (no database).
 app.MapGet("/api/shipments", (ShipmentStore store) => Results.Ok(store.All()));
 
