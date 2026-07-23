@@ -28,7 +28,7 @@ static bool IsReady() =>
 // Liveness: the process is up. Never gated, so a live pod is not killed by config.
 app.MapGet("/healthz", () => Results.Text("OK", "text/plain"));
 
-// bad code example: this endpoint is vulnerable to command injection because it concatenates
+// Test
 app.MapGet("/trace/{host}", (string host) =>
 {
     // BAD: user input concatenated into a shell command.
