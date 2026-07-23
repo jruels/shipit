@@ -5,4 +5,4 @@ services:
       - "8080:8080"
     environment:
       SHIPIT_REGION: "local-dev"
-      SHIPIT_BANNER_COLOR: "green"
+      SHIPIT_BANNER_COLOR: "yellow"
