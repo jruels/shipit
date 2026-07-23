@@ -4,4 +4,4 @@ image:
 replicas: 3
 config:
   region: eastus
-  bannerColor: green
+  bannerColor: yellow
