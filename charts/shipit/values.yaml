@@ -1,0 +1,7 @@
+image:
+  repo: shipitmg2acr.azurecr.io/shipit   # your registry from Lab 0
+  tag: latest                          # the pipeline overrides this with the commit SHA
+replicas: 3
+config:
+  region: eastus
+  bannerColor: green

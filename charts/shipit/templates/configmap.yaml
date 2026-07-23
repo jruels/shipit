@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shipit-config
+data:
+  SHIPIT_REGION: "{{ .Values.config.region }}"
+  SHIPIT_BANNER_COLOR: "{{ .Values.config.bannerColor }}"
