@@ -1,5 +1,6 @@
 using ShipIt.Models;
 using ShipIt.Services;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
