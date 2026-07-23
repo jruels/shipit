@@ -1,13 +1,14 @@
 name: CI
 
 on:
-  permissions:
-    id-token: write
-    contents: read
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   build-and-test:
