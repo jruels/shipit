@@ -81,13 +81,6 @@ app.MapPost("/api/shipments", (ShipmentInput input, ShipmentStore store) =>
     return Results.Created($"/api/shipments/{created.Id}", created);
 });
 
-app.MapGet("/trace/{host}", (string host) =>
-{
-    // BAD: user input concatenated into a shell command.
-    Process.Start("/bin/sh", $"-c \"ping -c 1 {host}\"");
-    return Results.Ok($"tracing {host}");
-});
-
 app.Run();
 
 // Exposed so the test project can host the app with WebApplicationFactory<Program>.
