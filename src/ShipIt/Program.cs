@@ -1,5 +1,6 @@
 using ShipIt.Models;
 using ShipIt.Services;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,14 @@ static bool IsReady() =>
 
 // Liveness: the process is up. Never gated, so a live pod is not killed by config.
 app.MapGet("/healthz", () => Results.Text("OK", "text/plain"));
+
+// bad code example: this endpoint is vulnerable to command injection because it concatenates
+app.MapGet("/trace/{host}", (string host) =>
+{
+    // BAD: user input concatenated into a shell command.
+    Process.Start("/bin/sh", $"-c \"ping -c 1 {host}\"");
+    return Results.Ok($"tracing {host}");
+});
 
 // Readiness: is the app ready to serve real traffic? Kubernetes holds traffic
 // back (and the CD pipeline rolls back) when this returns 503.
