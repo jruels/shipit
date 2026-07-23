@@ -54,7 +54,6 @@ jobs:
         run: |
           az containerapp update -n shipit-production -g "$RG" \
             --image "$ACR.azurecr.io/shipit:$SHA"
-            - name: Health check
       - name: Health check
         id: health
         continue-on-error: true
