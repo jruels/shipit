@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipit
+spec:
+  replicas: {{ .Values.replicas }}
+  selector: { matchLabels: { app: shipit } }
+  template:
+    metadata:
+      labels: { app: shipit }
+      annotations:
+        # Roll the pods whenever the ConfigMap changes. Without this, editing config
+        # (e.g. bannerColor) updates the ConfigMap but the running pods keep their old
+        # env values until something else restarts them, so the change appears to do nothing.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: shipit
+          image: "{{ .Values.image.repo }}:{{ .Values.image.tag }}"
+          ports: [ { containerPort: 8080 } ]
+          envFrom:
+            - configMapRef: { name: shipit-config }
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8080 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
