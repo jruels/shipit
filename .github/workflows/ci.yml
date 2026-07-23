@@ -63,6 +63,14 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Build and push the image
+        if: github.event_name == 'push'
+        run: |
+          az acr login --name ${{ vars.ACR }}
+          IMAGE=${{ vars.ACR }}.azurecr.io/shipit:${{ github.sha }}
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
       - name: Scan the image
         if: github.event_name == 'push'
         uses: aquasecurity/trivy-action@master
@@ -71,11 +79,3 @@ jobs:
           format: table
           severity: HIGH,CRITICAL
           exit-code: "0"
-
-      - name: Build and push the image
-        if: github.event_name == 'push'
-        run: |
-          az acr login --name ${{ vars.ACR }}
-          IMAGE=${{ vars.ACR }}.azurecr.io/shipit:${{ github.sha }}
-          docker build -t "$IMAGE" .
-          docker push "$IMAGE"
