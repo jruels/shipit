@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# copy the project file and restore first, so this layer stays cached
+# copy the project file and restore first, so this layer stays cached.
 COPY src/ShipIt/ShipIt.csproj src/ShipIt/
 RUN dotnet restore src/ShipIt/ShipIt.csproj
 
