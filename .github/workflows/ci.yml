@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
-
+                
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -38,7 +38,7 @@ jobs:
 
       - name: Test
         run: dotnet test --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
-
+              
       - name: Publish the app
         run: dotnet publish src/ShipIt --configuration Release --no-build -o ./publish
 
@@ -79,3 +79,5 @@ jobs:
           format: table
           severity: HIGH,CRITICAL
           exit-code: "0"
+    
+  
