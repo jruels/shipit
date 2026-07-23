@@ -30,7 +30,7 @@ jobs:
           RG: ${{ vars.RG }}
           ACR: ${{ vars.ACR }}
 
-    deploy-production:
+  deploy-production:
     needs: deploy-staging
     runs-on: ubuntu-latest
     environment: production        # run pauses here for the required reviewer
